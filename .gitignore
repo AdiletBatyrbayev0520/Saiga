@@ -9,5 +9,6 @@ wheels/
 # Virtual environments
 .venv
 tiles/
+slices/
 dataset/
 *.pt
