@@ -14,7 +14,7 @@
 # Yolo models testing:
 ## Without post-training:
 ### Yolo11x - confidence:0.1
-![Yolo11x-confidence-0.1](readme_images\yolo11x-0.1.png)
+![Yolo11x-confidence-0.1](readme_images/yolo11x-0.1.png)
 
 [folder-to-yolo11x-results](./predicted_images-yolo11x/)
 ### Yolov8x - confidence:0.1
