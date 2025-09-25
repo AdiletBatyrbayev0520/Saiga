@@ -16,7 +16,11 @@ def create_image_slices(image_path, overlap_percentage, destination_folder, slic
         raise ValueError("Overlap percentage must be between 0 and 99")
     
     os.makedirs(destination_folder, exist_ok=True)
-    
+    image_name = os.path.basename(image_path)
+    destination_folder = os.path.join(destination_folder, f"{image_name}")
+    destination_folder = os.path.splitext(destination_folder)[0]
+    os.makedirs(destination_folder, exist_ok=True)
+
     try:
         image = Image.open(image_path)
         logger.info(f"Loaded image: {image_path}")
