@@ -3,10 +3,7 @@ import sys
 import argparse
 from PIL import Image
 import math
-import logging
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 def create_image_slices(image_path, overlap_percentage, destination_folder, slice_size=512):
     if not os.path.exists(image_path):
@@ -16,27 +13,31 @@ def create_image_slices(image_path, overlap_percentage, destination_folder, slic
         raise ValueError("Overlap percentage must be between 0 and 99")
     
     os.makedirs(destination_folder, exist_ok=True)
-    
+    image_name = os.path.basename(image_path)
+    destination_folder = os.path.join(destination_folder, f"{image_name}")
+    destination_folder = os.path.splitext(destination_folder)[0]
+    os.makedirs(destination_folder, exist_ok=True)
+
     try:
         image = Image.open(image_path)
-        logger.info(f"Loaded image: {image_path}")
-        logger.info(f"Image size: {image.size[0]} x {image.size[1]} pixels")
+        print(f"Loaded image: {image_path}")
+        print(f"Image size: {image.size[0]} x {image.size[1]} pixels")
     except Exception as e:
         raise ValueError(f"Could not open image: {e}")
     
     overlap_pixels = int(slice_size * overlap_percentage / 100)
     step_size = slice_size - overlap_pixels
     
-    logger.info(f"slice size: {slice_size}x{slice_size} pixels")
-    logger.info(f"Overlap: {overlap_percentage}% ({overlap_pixels} pixels)")
-    logger.info(f"Step size: {step_size} pixels")
+    print(f"slice size: {slice_size}x{slice_size} pixels")
+    print(f"Overlap: {overlap_percentage}% ({overlap_pixels} pixels)")
+    print(f"Step size: {step_size} pixels")
     
     img_width, img_height = image.size
     
     slices_x = math.ceil((img_width - overlap_pixels) / step_size)
     slices_y = math.ceil((img_height - overlap_pixels) / step_size)
     
-    logger.info(f"Will create {slices_x} x {slices_y} = {slices_x * slices_y} slices")
+    print(f"Will create {slices_x} x {slices_y} = {slices_x * slices_y} slices")
     
     base_name = os.path.splitext(os.path.basename(image_path))[0]
     slice_count = 0
@@ -60,9 +61,9 @@ def create_image_slices(image_path, overlap_percentage, destination_folder, slic
             slice_count += 1
             
             if slice_count % 50 == 0:
-                logger.info(f"Processed {slice_count} slices...")
+                print(f"Processed {slice_count} slices...")
     
-    logger.info(f"Successfully created {slice_count} slices in '{destination_folder}'")
+    print(f"Successfully created {slice_count} slices in '{destination_folder}'")
     return slice_count
 
 
