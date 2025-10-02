@@ -12,3 +12,4 @@ tiles/
 slices/
 dataset/
 *.pt
+predicted_images*/

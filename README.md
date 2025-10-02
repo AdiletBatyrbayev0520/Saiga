@@ -153,12 +153,8 @@ python src/tools/visualize_slicing.py \
 ##### YOLO11x - confidence: 0.1
 ![Yolo11x-confidence-0.1](readme_content/yolo11x-0.1.png)
 
-📁 [Папка с результатами YOLO11x](./predicted_images-yolo11x/)
-
 ##### YOLOv8x - confidence: 0.1  
 ![Yolov8x-confidence-0.1](readme_content/yolov8x-0.1.png)
-
-📁 [Папка с результатами YOLOv8x](./predicted_images-yolov8x/)
 
 ### Статистика датасета
 
