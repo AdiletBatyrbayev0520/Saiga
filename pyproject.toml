@@ -12,6 +12,7 @@ dependencies = [
     "ipykernel",
     "pandas",
     "python-dotenv>=1.1.1",
+    "tqdm>=4.67.1",
 ]
 
 [[tool.uv.index]]

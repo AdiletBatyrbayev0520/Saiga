@@ -3,15 +3,15 @@ import sys
 import argparse
 from PIL import Image
 import math
+from src.config import OVERLAPPING_PERCENTAGE, SLICES_FOLDER, SLICE_SIZE
 
-
-def create_image_slices(image_path, overlap_percentage, destination_folder, slice_size=512):
+def create_image_slices(image_path):
     if not os.path.exists(image_path):
         raise FileNotFoundError(f"Image file not found: {image_path}")
-    
-    if not 0 <= overlap_percentage < 100:
+
+    if not 0 <= OVERLAPPING_PERCENTAGE < 100:
         raise ValueError("Overlap percentage must be between 0 and 99")
-    
+    destination_folder = SLICES_FOLDER
     os.makedirs(destination_folder, exist_ok=True)
     image_name = os.path.basename(image_path)
     destination_folder = os.path.join(destination_folder, f"{image_name}")
@@ -24,12 +24,12 @@ def create_image_slices(image_path, overlap_percentage, destination_folder, slic
         print(f"Image size: {image.size[0]} x {image.size[1]} pixels")
     except Exception as e:
         raise ValueError(f"Could not open image: {e}")
-    
-    overlap_pixels = int(slice_size * overlap_percentage / 100)
-    step_size = slice_size - overlap_pixels
-    
-    print(f"slice size: {slice_size}x{slice_size} pixels")
-    print(f"Overlap: {overlap_percentage}% ({overlap_pixels} pixels)")
+
+    overlap_pixels = int(SLICE_SIZE * OVERLAPPING_PERCENTAGE / 100)
+    step_size = SLICE_SIZE - overlap_pixels
+
+    print(f"slice size: {SLICE_SIZE}x{SLICE_SIZE} pixels")
+    print(f"Overlap: {OVERLAPPING_PERCENTAGE}% ({overlap_pixels} pixels)")
     print(f"Step size: {step_size} pixels")
     
     img_width, img_height = image.size
@@ -46,11 +46,19 @@ def create_image_slices(image_path, overlap_percentage, destination_folder, slic
         for col in range(slices_x):
             left = col * step_size
             top = row * step_size
-            right = min(left + slice_size, img_width)
-            bottom = min(top + slice_size, img_height)
-            
-            if (right - left) < slice_size // 2 or (bottom - top) < slice_size // 2:
-                continue
+            right = left + SLICE_SIZE
+            bottom = top + SLICE_SIZE
+            if left + SLICE_SIZE > img_width:
+                left = img_width - SLICE_SIZE
+                right = img_width
+            if top + SLICE_SIZE > img_height:
+                top = img_height - SLICE_SIZE
+                bottom = img_height
+
+
+            if (right - left) < SLICE_SIZE // 2 or (bottom - top) < SLICE_SIZE // 2:
+                print("!!!!!! Error bro: right-left < SLICE_SIZE // 2 or bottom-top < SLICE_SIZE // 2")
+                break
             
             slice = image.crop((left, top, right, bottom))
             
@@ -66,6 +74,28 @@ def create_image_slices(image_path, overlap_percentage, destination_folder, slic
     print(f"Successfully created {slice_count} slices in '{destination_folder}'")
     return slice_count
 
+    
+def create_image_slices_parallel():
+    from multiprocessing import Pool, cpu_count
+    from tqdm import tqdm 
+
+    images_folder = "dataset/0.0.1/АФС для обработки ИИ"
+    image_paths = [f"{images_folder}/{image_path}" for image_path in os.listdir(images_folder)]
+
+        
+    num_processes = max(1, cpu_count() - 4)
+    print(f"Processing {len(image_paths)} images using {num_processes} processes")
+
+    with Pool(processes=num_processes) as pool:
+        results = list(tqdm(
+            pool.imap(create_image_slices, image_paths),
+            total=len(image_paths),
+            desc="Processing images"
+        ))
+
+    total_slices = sum(results)
+    successful_images = len(results)  # All completed images
+    print(f"\nCompleted: {successful_images} images, {total_slices} total slices")
 
 def main():
     parser = argparse.ArgumentParser(
@@ -96,7 +126,7 @@ Examples:
             args.slice_size
         )
     except Exception as e:
-        logger.error(f"Error: {e}")
+        print(f"Error: {e}")
         sys.exit(1)
 
 
