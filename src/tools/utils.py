@@ -6,6 +6,17 @@ import time
 def copyfile(source_path, destination_path):
     with open(source_path, 'rb') as src, open(destination_path, 'wb') as dst:
         dst.write(src.read())
+        
+def copyfolder(source_folder, destination_folder):
+    if not os.path.exists(destination_folder):
+        os.makedirs(destination_folder)
+    for item in os.listdir(source_folder):
+        src_path = os.path.join(source_folder, item)
+        dst_path = os.path.join(destination_folder, item)
+        if os.path.isdir(src_path):
+            copyfolder(src_path, dst_path)
+        else:
+            copyfile(src_path, dst_path)
 
 def get_destination_folder(list_of_prefixes):
     destination_folder = "-".join(map(str, list_of_prefixes))

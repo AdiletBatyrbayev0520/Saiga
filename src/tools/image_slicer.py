@@ -75,7 +75,7 @@ def create_image_slices(image_path):
     return slice_count
 
     
-def create_image_slices_parallel():
+def create_images_slices_parallel():
     from multiprocessing import Pool, cpu_count
     from tqdm import tqdm 
 

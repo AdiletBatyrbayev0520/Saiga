@@ -2,11 +2,13 @@ import torch
 from ultralytics import YOLO
 import os
 import time
-from src.tools.utils import copyfile 
+from src.tools.utils import copyfile, copyfolder
 import sys
 if 'src.config' in sys.modules:
     del sys.modules['src.config']
 from src.config import CONFIDENCE_THRESHOLD, SLICE_SIZE, SLICES_FOLDER
+from multiprocessing import Pool, cpu_count
+from tqdm import tqdm 
 
 def get_devices():
     devices = []
@@ -47,7 +49,12 @@ def create_annotation_file(image_path, boxes, output_folder, image_size):
             height = (box[3] - box[1]) / image_size
             f.write(f"0 {x_center} {y_center} {width} {height}\n")
     # print(f"Аннотации сохранены в {output_folder}/{filename}.txt")
-
+def create_annotation_folder(folder_path, boxes, output_folder, image_size):
+    images_path = os.listdir(folder_path)
+    for image_path in images_path:
+        full_image_path = f"{folder_path}/{image_path}"
+        create_annotation_file(full_image_path, boxes, output_folder, image_size)
+        
 def read_annotation_file(annotation_path, image_size):
     boxes = []
     if os.path.exists(annotation_path):
@@ -66,41 +73,72 @@ def read_annotation_file(annotation_path, image_size):
                     boxes.append((left, top, right, bottom))
     return boxes
 
-def process_images(model, output_folder, device):
+def process_folder(folder_path, model, device, output_folder):
+    predictions = model.predict(folder_path, conf=CONFIDENCE_THRESHOLD, device=device, verbose=False)
+    total_detections = sum(len(prediction.boxes.conf) for prediction in predictions)
+    final_folder_path = f"{output_folder}/{folder_path.split('/')[-1]}"
+    if total_detections > 0:
+        for prediction in predictions:
+            if len(prediction.boxes.conf) > 0:
+                if not os.path.exists(final_folder_path):
+                    os.makedirs(final_folder_path)
+                final_image_path = f"{final_folder_path}/{prediction.path.split('\\')[-1]}"
+                source_image_path = f"{folder_path}/{prediction.path.split('\\')[-1]}"
+                copyfile(source_image_path, final_image_path)
+                create_annotation_file(
+                    image_path=final_image_path,
+                    boxes=prediction.boxes.xyxy.tolist(),
+                    output_folder=final_folder_path,
+                    image_size=SLICE_SIZE
+                )
+    return total_detections
+
+def worker_function(args):
+    """Wrapper function for multiprocessing"""
+    folder_path, model, device, output_folder = args
+    return process_folder(folder_path, model, device, output_folder)
+
+def process_folders_parallel(models, devices, output_folder):
+    start_time = time.time()
+    total_detections = 0
+    folders_list = os.listdir(SLICES_FOLDER)
+    
+    tasks = []
+    num_workers = len(models)
+    
+    for i, folder in enumerate(folders_list):
+        model_idx = i % len(models)
+        device_idx = (i // len(models)) % len(devices)
+        tasks.append((f"{SLICES_FOLDER}/{folder}", models[model_idx], devices[device_idx], output_folder))
+    print(f"Обработка {len(tasks)} папок с детекциями используя {num_workers} процессов")
+    with Pool(processes=num_workers) as pool:
+        results = list(tqdm(
+            pool.imap(worker_function, tasks),
+            total=len(tasks),
+            desc="Processing folders"
+        ))
+    
+    total_detections = sum(results)
+    processed_count = len([r for r in results if r > 0])
+    
+    end_time = time.time()
+    print(f"\nГотово! Обработано {processed_count} папок с детекциями")
+    print(f"Общее количество детекций: {total_detections}")
+    print(f"Время обработки: {end_time - start_time:.2f} секунд")
+    return total_detections
+
+def process_folders(model, device, output_folder):
     print(f"Обработка изображений на устройстве: {device}\nпПапка вывода: {output_folder}")
     start_time = time.time()
     processed_count = 0
     total_detections = 0
-    boxes_list = []
     for folder in os.listdir(SLICES_FOLDER):
         folder_path = f"{SLICES_FOLDER}/{folder}"
         if os.path.isdir(folder_path):
-            for image_path in os.listdir(folder_path):
-                full_image_path = f"{folder_path}/{image_path}"
-                predictions = model.predict(full_image_path, conf=CONFIDENCE_THRESHOLD, device=device, verbose=False)
-                
-                if len(predictions[0].boxes.conf) > 0:
-                    boxes_data = {'source_image_path': full_image_path, 'coordinates': predictions[0].boxes.xyxy.tolist()}
-                    boxes_list.append(boxes_data)
-                    if not os.path.exists(f"{output_folder}/{folder}"):
-                        os.makedirs(f"{output_folder}/{folder}")
-                    final_image_path = f"{output_folder}/{folder}/{image_path}"
-                    copyfile(full_image_path, final_image_path)
-                    predictions[0].save(final_image_path)
-                    create_annotation_file(
-                        image_path=full_image_path, 
-                        boxes=predictions[0].boxes.xyxy.tolist(), 
-                        output_folder=f"{output_folder}/{folder}", 
-                        image_size=SLICE_SIZE
-                    )
-                    processed_count += 1
-                    total_detections += len(predictions[0].boxes.conf)
-                    if processed_count % 10 == 0:  
-                        print(f"Обработано: {processed_count} изображений с детекциями")
-
+            total_detections += process_folder(folder_path, model, device, output_folder)
     end_time = time.time()
     print(f"\nГотово! Обработано {processed_count} изображений с детекциями")
     print(f"Общее количество детекций: {total_detections}")
     print(f"Время обработки: {end_time - start_time:.2f} секунд")
     print(f"Устройство: {device}")
-    return boxes_list
+    return total_detections
