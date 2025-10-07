@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def filter_outliers(, OUTLIER_THRESHOLD_K):
+def filter_outliers(folder_path, ):
 
     filtered_boxes_from_outliers = []
     areas = []
