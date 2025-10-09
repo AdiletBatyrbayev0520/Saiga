@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
 Image Slicing Visualization Tool
-Visualizes the process of dividing images into overlapping tiles.
+Visualizes the process of dividing images into overlapping slices.
 
 Usage:
-    python visualize_slicing.py <image_path> <overlap_percentage> [tile_size]
+    python visualize_slicing.py <image_path> <overlap_percentage> [slice_size]
 """
 
 import os
@@ -18,15 +18,15 @@ import math
 from matplotlib.colors import to_rgba
 
 
-def visualize_image_slicing(image_path, overlap_percentage, tile_size=512, show_tiles_count=6):
+def visualize_image_slicing(image_path, overlap_percentage, slice_size=640, show_slices_count=6):
     """
-    Visualize the image slicing process with overlapping tiles.
+    Visualize the image slicing process with overlapping slices.
     
     Args:
         image_path (str): Path to the input image
         overlap_percentage (float): Percentage of overlap (0-99)
-        tile_size (int): Size of each tile in pixels
-        show_tiles_count (int): Number of sample tiles to display
+        slice_size (int): Size of each slice in pixels
+        show_slices_count (int): Number of sample slices to display
     """
     
     # Validate inputs
@@ -46,18 +46,18 @@ def visualize_image_slicing(image_path, overlap_percentage, tile_size=512, show_
         raise ValueError(f"Could not open image: {e}")
     
     # Calculate parameters
-    overlap_pixels = int(tile_size * overlap_percentage / 100)
-    step_size = tile_size - overlap_pixels
+    overlap_pixels = int(slice_size * overlap_percentage / 100)
+    step_size = slice_size - overlap_pixels
     img_width, img_height = image.size
     
-    # Calculate number of tiles
-    tiles_x = math.ceil((img_width - overlap_pixels) / step_size)
-    tiles_y = math.ceil((img_height - overlap_pixels) / step_size)
+    # Calculate number of slices
+    slices_x = math.ceil((img_width - overlap_pixels) / step_size)
+    slices_y = math.ceil((img_height - overlap_pixels) / step_size)
     
-    print(f"Tile size: {tile_size}x{tile_size} pixels")
+    print(f"slice size: {slice_size}x{slice_size} pixels")
     print(f"Overlap: {overlap_percentage}% ({overlap_pixels} pixels)")
     print(f"Step size: {step_size} pixels")
-    print(f"Grid: {tiles_x} x {tiles_y} = {tiles_x * tiles_y} tiles")
+    print(f"Grid: {slices_x} x {slices_y} = {slices_x * slices_y} slices")
     
     # Create visualization
     fig = plt.figure(figsize=(20, 12))
@@ -68,12 +68,12 @@ def visualize_image_slicing(image_path, overlap_percentage, tile_size=512, show_
     ax1.set_title(f'Original Image\n{img_width} x {img_height} pixels', fontsize=12)
     
     # Draw grid lines
-    for col in range(tiles_x + 1):
+    for col in range(slices_x + 1):
         x = col * step_size
         if x <= img_width:
             ax1.axvline(x=x, color='red', linestyle='-', alpha=0.7, linewidth=1)
     
-    for row in range(tiles_y + 1):
+    for row in range(slices_y + 1):
         y = row * step_size
         if y <= img_height:
             ax1.axhline(y=y, color='red', linestyle='-', alpha=0.7, linewidth=1)
@@ -89,12 +89,12 @@ def visualize_image_slicing(image_path, overlap_percentage, tile_size=512, show_
     # Color different overlapping regions
     colors = ['red', 'blue', 'green', 'yellow', 'purple', 'orange']
     
-    for row in range(min(tiles_y, 4)):  # Show first few rows
-        for col in range(min(tiles_x, 6)):  # Show first few columns
+    for row in range(min(slices_y, 4)):  # Show first few rows
+        for col in range(min(slices_x, 6)):  # Show first few columns
             left = col * step_size
             top = row * step_size
-            right = min(left + tile_size, img_width)
-            bottom = min(top + tile_size, img_height)
+            right = min(left + slice_size, img_width)
+            bottom = min(top + slice_size, img_height)
             
             color = colors[(row + col) % len(colors)]
             alpha = 0.3 if (row + col) % 2 == 0 else 0.2
@@ -115,73 +115,73 @@ def visualize_image_slicing(image_path, overlap_percentage, tile_size=512, show_
     demo_width = 8
     demo_height = 6
     demo_step = 1.5
-    demo_tile = 2
+    demo_slice = 2
     
     ax3.set_xlim(0, demo_width)
     ax3.set_ylim(0, demo_height)
     ax3.set_aspect('equal')
     
-    # Draw tiles
+    # Draw slices
     for i in range(4):
         for j in range(3):
             x = i * demo_step
             y = j * demo_step
-            if x + demo_tile <= demo_width and y + demo_tile <= demo_height:
+            if x + demo_slice <= demo_width and y + demo_slice <= demo_height:
                 rect = patches.Rectangle(
-                    (x, y), demo_tile, demo_tile,
+                    (x, y), demo_slice, demo_slice,
                     linewidth=2, edgecolor='blue', facecolor='lightblue', alpha=0.5
                 )
                 ax3.add_patch(rect)
                 
-                # Add tile number
-                ax3.text(x + demo_tile/2, y + demo_tile/2, f'{j*4+i}', 
+                # Add slice number
+                ax3.text(x + demo_slice/2, y + demo_slice/2, f'{j*4+i}', 
                         ha='center', va='center', fontweight='bold')
     
     # Add dimensions
-    ax3.annotate('', xy=(0, -0.3), xytext=(demo_tile, -0.3),
+    ax3.annotate('', xy=(0, -0.3), xytext=(demo_slice, -0.3),
                 arrowprops=dict(arrowstyle='<->', color='red', lw=2))
-    ax3.text(demo_tile/2, -0.5, f'Tile size\n({tile_size}px)', ha='center', color='red')
+    ax3.text(demo_slice/2, -0.5, f'slice size\n({slice_size}px)', ha='center', color='red')
     
     ax3.annotate('', xy=(0, -0.8), xytext=(demo_step, -0.8),
                 arrowprops=dict(arrowstyle='<->', color='green', lw=2))
     ax3.text(demo_step/2, -1.0, f'Step size\n({step_size}px)', ha='center', color='green')
     
-    overlap_demo = demo_tile - demo_step
-    ax3.annotate('', xy=(demo_step, demo_tile + 0.1), xytext=(demo_tile, demo_tile + 0.1),
+    overlap_demo = demo_slice - demo_step
+    ax3.annotate('', xy=(demo_step, demo_slice + 0.1), xytext=(demo_slice, demo_slice + 0.1),
                 arrowprops=dict(arrowstyle='<->', color='purple', lw=2))
-    ax3.text((demo_step + demo_tile)/2, demo_tile + 0.3, f'Overlap\n({overlap_pixels}px)', 
+    ax3.text((demo_step + demo_slice)/2, demo_slice + 0.3, f'Overlap\n({overlap_pixels}px)', 
              ha='center', color='purple')
     
     ax3.set_title('Tiling Schema', fontsize=12)
     ax3.axis('off')
     
-    # 4-6. Sample tiles
+    # 4-6. Sample slices
     sample_positions = []
     
-    # Select interesting tile positions
+    # Select interesting slice positions
     positions_to_show = [
         (0, 0),  # Top-left corner
-        (min(1, tiles_y-1), min(2, tiles_x-1)),  # Somewhere in middle
-        (min(2, tiles_y-1), 0),  # Left edge
-        (0, min(3, tiles_x-1)),  # Top edge
-        (min(tiles_y-1, 3), min(tiles_x-1, 4)),  # Towards bottom-right
-        (min(1, tiles_y-1), min(1, tiles_x-1)),  # Early middle
+        (min(1, slices_y-1), min(2, slices_x-1)),  # Somewhere in middle
+        (min(2, slices_y-1), 0),  # Left edge
+        (0, min(3, slices_x-1)),  # Top edge
+        (min(slices_y-1, 3), min(slices_x-1, 4)),  # Towards bottom-right
+        (min(1, slices_y-1), min(1, slices_x-1)),  # Early middle
     ]
     
     for idx, (row, col) in enumerate(positions_to_show[:3]):
         ax = plt.subplot(2, 3, 4 + idx)
         
-        # Calculate tile boundaries
+        # Calculate slice boundaries
         left = col * step_size
         top = row * step_size
-        right = min(left + tile_size, img_width)
-        bottom = min(top + tile_size, img_height)
+        right = min(left + slice_size, img_width)
+        bottom = min(top + slice_size, img_height)
         
-        # Extract and display tile
+        # Extract and display slice
         if right > left and bottom > top:
-            tile_img = img_array[top:bottom, left:right]
-            ax.imshow(tile_img)
-            ax.set_title(f'Tile [{row}, {col}]\nPosition: ({left}, {top})\nSize: {right-left}x{bottom-top}', 
+            slice_img = img_array[top:bottom, left:right]
+            ax.imshow(slice_img)
+            ax.set_title(f'slice [{row}, {col}]\nPosition: ({left}, {top})\nSize: {right-left}x{bottom-top}', 
                         fontsize=10)
             sample_positions.append((row, col, left, top, right, bottom))
         
@@ -191,22 +191,22 @@ def visualize_image_slicing(image_path, overlap_percentage, tile_size=512, show_
     
     # Show statistics
     total_pixels = img_width * img_height
-    tile_pixels = tile_size * tile_size
+    slice_pixels = slice_size * slice_size
     overlap_ratio = overlap_percentage / 100
     
     stats_text = f"""
 Image Slicing Statistics:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Original image: {img_width} × {img_height} = {total_pixels:,} pixels
-Tile size: {tile_size} × {tile_size} = {tile_pixels:,} pixels
+slice size: {slice_size} × {slice_size} = {slice_pixels:,} pixels
 Overlap percentage: {overlap_percentage}% ({overlap_pixels} pixels)
 Step size: {step_size} pixels
-Grid dimensions: {tiles_x} × {tiles_y} = {tiles_x * tiles_y} tiles
+Grid dimensions: {slices_x} × {slices_y} = {slices_x * slices_y} slices
 
 Memory usage (approximate):
 - Original image: {total_pixels * 3 / 1024 / 1024:.1f} MB (RGB)
-- All tiles: {tiles_x * tiles_y * tile_pixels * 3 / 1024 / 1024:.1f} MB
-- Compression ratio: {(tiles_x * tiles_y * tile_pixels) / total_pixels:.1f}x
+- All slices: {slices_x * slices_y * slice_pixels * 3 / 1024 / 1024:.1f} MB
+- Compression ratio: {(slices_x * slices_y * slice_pixels) / total_pixels:.1f}x
 """
     
     plt.figtext(0.02, 0.02, stats_text, fontsize=10, family='monospace',
@@ -218,7 +218,7 @@ Memory usage (approximate):
     return sample_positions
 
 
-def create_detailed_overlap_visualization(image_path, overlap_percentage, tile_size=512):
+def create_detailed_overlap_visualization(image_path, overlap_percentage, slice_size=512):
     """
     Create a detailed visualization focusing on overlap regions.
     """
@@ -229,12 +229,12 @@ def create_detailed_overlap_visualization(image_path, overlap_percentage, tile_s
     img_width, img_height = image.size
     
     # Calculate parameters
-    overlap_pixels = int(tile_size * overlap_percentage / 100)
-    step_size = tile_size - overlap_pixels
+    overlap_pixels = int(slice_size * overlap_percentage / 100)
+    step_size = slice_size - overlap_pixels
     
     # Focus on a small region to show overlap clearly
-    focus_width = min(tile_size * 3, img_width)
-    focus_height = min(tile_size * 3, img_height)
+    focus_width = min(slice_size * 3, img_width)
+    focus_height = min(slice_size * 3, img_height)
     focus_img = img_array[:focus_height, :focus_width]
     
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 8))
@@ -249,15 +249,15 @@ def create_detailed_overlap_visualization(image_path, overlap_percentage, tile_s
     # Create overlap heatmap
     overlap_map = np.zeros((focus_height, focus_width))
     
-    tiles_x = math.ceil((focus_width - overlap_pixels) / step_size)
-    tiles_y = math.ceil((focus_height - overlap_pixels) / step_size)
+    slices_x = math.ceil((focus_width - overlap_pixels) / step_size)
+    slices_y = math.ceil((focus_height - overlap_pixels) / step_size)
     
-    for row in range(tiles_y):
-        for col in range(tiles_x):
+    for row in range(slices_y):
+        for col in range(slices_x):
             left = col * step_size
             top = row * step_size
-            right = min(left + tile_size, focus_width)
-            bottom = min(top + tile_size, focus_height)
+            right = min(left + slice_size, focus_width)
+            bottom = min(top + slice_size, focus_height)
             
             if right > left and bottom > top:
                 overlap_map[top:bottom, left:right] += 1
@@ -267,12 +267,12 @@ def create_detailed_overlap_visualization(image_path, overlap_percentage, tile_s
     plt.colorbar(im, ax=ax2, label='Overlap Count')
     
     # Draw grid
-    for col in range(tiles_x + 1):
+    for col in range(slices_x + 1):
         x = col * step_size
         if x <= focus_width:
             ax2.axvline(x=x, color='cyan', linestyle='-', alpha=0.8, linewidth=2)
     
-    for row in range(tiles_y + 1):
+    for row in range(slices_y + 1):
         y = row * step_size
         if y <= focus_height:
             ax2.axhline(y=y, color='cyan', linestyle='-', alpha=0.8, linewidth=2)
@@ -288,9 +288,9 @@ def main():
     parser = argparse.ArgumentParser(description="Visualize image slicing process")
     parser.add_argument("image_path", help="Path to the input image")
     parser.add_argument("overlap_percentage", type=float, 
-                       help="Overlap percentage between tiles (0-99)")
-    parser.add_argument("--tile-size", type=int, default=512,
-                       help="Size of each tile in pixels (default: 512)")
+                       help="Overlap percentage between slices (0-99)")
+    parser.add_argument("--slice-size", type=int, default=512,
+                       help="Size of each slice in pixels (default: 512)")
     parser.add_argument("--detailed", action="store_true",
                        help="Show detailed overlap visualization")
     
@@ -298,12 +298,12 @@ def main():
     
     try:
         print("Creating main visualization...")
-        visualize_image_slicing(args.image_path, args.overlap_percentage, args.tile_size)
+        visualize_image_slicing(args.image_path, args.overlap_percentage, args.slice_size)
         
         if args.detailed:
             print("Creating detailed overlap visualization...")
             create_detailed_overlap_visualization(
-                args.image_path, args.overlap_percentage, args.tile_size
+                args.image_path, args.overlap_percentage, args.slice_size
             )
             
     except Exception as e:

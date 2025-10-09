@@ -2,7 +2,7 @@ import torch
 from ultralytics import YOLO
 import os
 import time
-from src.main.python.tools.utils import copyfile
+from src.main.python.utils.utils import copyfile
 import sys
 if 'src.config' in sys.modules:
     del sys.modules['src.config']

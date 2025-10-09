@@ -1,5 +1,5 @@
 import os
-from main.resources.config import IOU_THRESHOLD
+from src.main.resources.config import IOU_THRESHOLD
 
 def calculate_iou(box1, box2):
     # box = [x1, y1, x2, y2]

@@ -3,7 +3,7 @@ import sys
 import argparse
 from PIL import Image
 import math
-from main.resources.config import OVERLAPPING_PERCENTAGE, SLICES_FOLDER, SLICE_SIZE
+from src.main.resources.config import OVERLAPPING_PERCENTAGE, SLICES_FOLDER, SLICE_SIZE
 
 def create_image_slices(image_path):
     if not os.path.exists(image_path):
@@ -75,18 +75,18 @@ def create_image_slices(image_path):
     return slice_count
 
     
-def create_images_slices_parallel():
+def create_images_slices_parallel(workers=1):
     from multiprocessing import Pool, cpu_count
     from tqdm import tqdm 
 
     images_folder = "dataset/0.0.1/АФС для обработки ИИ"
     image_paths = [f"{images_folder}/{image_path}" for image_path in os.listdir(images_folder)]
 
-        
-    num_processes = max(1, cpu_count() - 4)
-    print(f"Processing {len(image_paths)} images using {num_processes} processes")
+    if workers == -1:
+        workers = max(1, cpu_count() - 1)
+    print(f"Processing {len(image_paths)} images using {workers} processes")
 
-    with Pool(processes=num_processes) as pool:
+    with Pool(processes=workers) as pool:
         results = list(tqdm(
             pool.imap(create_image_slices, image_paths),
             total=len(image_paths),
