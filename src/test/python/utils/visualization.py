@@ -1,8 +1,3 @@
-#!/usr/bin/env python3
-"""
-Утилиты для визуализации изображений с боксами
-"""
-
 import os
 from PIL import Image, ImageDraw, ImageFont
 import numpy as np
@@ -18,23 +13,9 @@ def draw_bounding_boxes_on_image(
     label: str = "saiga",
     font_size: int = 20
 ) -> None:
-    """
-    Рисует боксы на изображении и сохраняет результат
-    
-    Args:
-        image_path (str): Путь к исходному изображению
-        boxes (List[List[float]]): Список боксов в формате [x1, y1, x2, y2]
-        output_path (str): Путь для сохранения результата
-        box_color (str): Цвет боксов
-        box_width (int): Толщина линий боксов
-        label (str): Подпись для боксов
-        font_size (int): Размер шрифта для подписей
-    """
-    # Открываем изображение
     image = Image.open(image_path)
     draw = ImageDraw.Draw(image)
     
-    # Пытаемся загрузить шрифт, если не получается - используем стандартный
     try:
         font = ImageFont.truetype("arial.ttf", font_size)
     except:
@@ -43,15 +24,12 @@ def draw_bounding_boxes_on_image(
         except:
             font = ImageFont.load_default()
     
-    # Рисуем каждый бокс
-    for i, box in enumerate(boxes):
+    for box in boxes:
         x1, y1, x2, y2 = box
         
-        # Рисуем прямоугольник
         draw.rectangle([x1, y1, x2, y2], outline=box_color, width=box_width)
         
-        # Добавляем подпись
-        text = f"{label} {i+1}"
+        text = f"{label}"
         bbox = draw.textbbox((0, 0), text, font=font)
         text_width = bbox[2] - bbox[0]
         text_height = bbox[3] - bbox[1]
@@ -79,28 +57,14 @@ def create_visualization_from_filtered_boxes(
     box_width: int = 3,
     label: str = "saiga"
 ) -> None:
-    """
-    Создает визуализацию для всех изображений с отфильтрованными боксами
-    
-    Args:
-        original_images_folder (str): Папка с оригинальными изображениями
-        filtered_boxes_list (List[dict]): Список отфильтрованных боксов
-        output_folder (str): Папка для сохранения результатов
-        box_color (str): Цвет боксов
-        box_width (int): Толщина линий боксов
-        label (str): Подпись для боксов
-    """
-    # Создаем папку для результатов
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
     
-    # Обрабатываем каждое изображение
     for image_name in os.listdir(original_images_folder):
         if image_name.endswith((".JPG", ".jpg", ".JPEG", ".jpeg", ".PNG", ".png")):
             source_image_path = os.path.join(original_images_folder, image_name)
-            output_image_path = os.path.join(output_folder, f"visualized_{image_name}")
+            output_image_path = os.path.join(output_folder, f"{image_name}")
             
-            # Находим соответствующие боксы для этого изображения
             image_basename = os.path.splitext(image_name)[0]
             matching_boxes = []
             
