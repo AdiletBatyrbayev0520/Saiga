@@ -10,7 +10,7 @@ wheels/
 .venv
 tiles/
 slices*/
-dataset/
+/dataset/
 *.pt
 predicted_images*/
 iou_filtered*/
