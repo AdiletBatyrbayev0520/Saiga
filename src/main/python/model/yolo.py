@@ -25,10 +25,10 @@ def get_devices():
         devices.append('cpu')
     return devices
 
-def get_models(model_name, devices):
+def get_models(model_name, devices, model_format=".pt"):
     models = []
     for device in devices:
-        models.append(YOLO(f'{model_name}.pt'))
+        models.append(YOLO(f'{model_name}{model_format}'))
         models[-1].to(device)
         print(f"Модель загружена на: {device}")
     return models

@@ -14,3 +14,4 @@ dataset/
 *.pt
 predicted_images*/
 iou_filtered*/
+*.onnx

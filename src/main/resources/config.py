@@ -1,6 +1,6 @@
 import os
 
-MODEL_NAME = "best_4"
+MODEL_NAME = "best_4_pytorch"
 OVERLAPPING_PERCENTAGE = 20
 SLICE_SIZE = 640
 SLICES_FOLDER = "slices"
@@ -16,6 +16,5 @@ IOU_THRESHOLD = 0.5
 
 EPOCHS = 150
 
-# Linux-совместимые пути
+# DATASET_FOLDER = os.path.join("dataset", "0.0.1", "АФС для обработки ИИ")
 DATASET_FOLDER = "dataset"
-IMAGES_FOLDER = os.path.join(DATASET_FOLDER, "0.0.1", "АФС для обработки ИИ")
