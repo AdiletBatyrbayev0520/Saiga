@@ -3,7 +3,7 @@ import sys
 import argparse
 from PIL import Image
 import math
-from src.main.resources.config import OVERLAPPING_PERCENTAGE, SLICES_FOLDER, SLICE_SIZE
+from src.main.resources.config import OVERLAPPING_PERCENTAGE, SLICES_FOLDER, SLICE_SIZE, IMAGES_FOLDER
 
 def create_image_slices(image_path):
     if not os.path.exists(image_path):
@@ -14,8 +14,7 @@ def create_image_slices(image_path):
     destination_folder = SLICES_FOLDER
     os.makedirs(destination_folder, exist_ok=True)
     image_name = os.path.basename(image_path)
-    destination_folder = os.path.join(destination_folder, f"{image_name}")
-    destination_folder = os.path.splitext(destination_folder)[0]
+    destination_folder = os.path.join(destination_folder, os.path.splitext(image_name)[0])
     os.makedirs(destination_folder, exist_ok=True)
 
     try:
@@ -79,8 +78,7 @@ def create_images_slices_parallel(workers=1):
     from multiprocessing import Pool, cpu_count
     from tqdm import tqdm 
 
-    images_folder = "dataset/0.0.1/АФС для обработки ИИ"
-    image_paths = [f"{images_folder}/{image_path}" for image_path in os.listdir(images_folder)]
+    image_paths = [os.path.join(IMAGES_FOLDER, image_path) for image_path in os.listdir(IMAGES_FOLDER)]
 
     if workers == -1:
         workers = max(1, cpu_count() - 1)

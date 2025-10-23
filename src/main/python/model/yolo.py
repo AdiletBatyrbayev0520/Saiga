@@ -40,8 +40,9 @@ def create_classes_file(output_folder):
 def create_annotation_file(image_path, boxes, classes_folder, image_size=(SLICE_SIZE, SLICE_SIZE)):
     if not os.path.exists(f"{classes_folder}/classes.txt"):
         create_classes_file(classes_folder)
-    filename = image_path.split('/')[-1].split('.')[0]
-    with open(f"{classes_folder}/{filename}.txt", "w") as f:  # "w" вместо "a"
+    filename = os.path.splitext(os.path.basename(image_path))[0]
+    annotation_path = os.path.join(classes_folder, f"{filename}.txt")
+    with open(annotation_path, "w") as f:  # "w" вместо "a"
         for box in boxes:
             x_center = (box[0] + box[2]) / 2 / image_size[0]
             y_center = (box[1] + box[3]) / 2 / image_size[1]
@@ -53,7 +54,7 @@ def create_annotation_folder(folder_path, boxes, output_folder, image_size):
     images_list = os.listdir(folder_path)
     for image_path in images_list:
         if image_path.endswith(".png"):
-            full_image_path = f"{folder_path}/{image_path}"
+            full_image_path = os.path.join(folder_path, image_path)
             create_annotation_file(full_image_path, boxes, output_folder, image_size)
         
 def read_annotation_file(annotation_path, image_size):
@@ -72,7 +73,7 @@ def read_annotation_file(annotation_path, image_size):
                     right = x_center + width / 2
                     bottom = y_center + height / 2
                     coordinates.append([left, top, right, bottom])
-    source_image_path = annotation_path.replace('.txt', '.png').replace('\\', '/')
+    source_image_path = os.path.splitext(annotation_path)[0] + '.png'
     if not len(coordinates) == 0:
         boxes_data = {'source_image_path': source_image_path, 'coordinates': coordinates}
         return boxes_data
@@ -94,15 +95,16 @@ def read_annotation_folder(folder_path, image_size=SLICE_SIZE):
 def process_folder(folder_path, model, device, output_folder):
     predictions = model.predict(folder_path, conf=CONFIDENCE_THRESHOLD, device=device, verbose=False)
     total_detections = sum(len(prediction.boxes.conf) for prediction in predictions)
-    destination_folder_path = f"{output_folder}/{folder_path.split('/')[-1]}"
+    destination_folder_path = os.path.join(output_folder, os.path.basename(folder_path))
     boxes_list = []
     if total_detections > 0:
         for prediction in predictions:
             if len(prediction.boxes.conf) > 0:
                 if not os.path.exists(destination_folder_path):
                     os.makedirs(destination_folder_path)
-                destination_image_path = f"{destination_folder_path}/{prediction.path.split('\\')[-1]}"
-                source_image_path = f"{folder_path}/{prediction.path.split('\\')[-1]}"
+                image_filename = os.path.basename(prediction.path)
+                destination_image_path = os.path.join(destination_folder_path, image_filename)
+                source_image_path = os.path.join(folder_path, image_filename)
                 boxes_data = {'source_image_path': source_image_path, 'coordinates': prediction.boxes.xyxy.tolist()}
                 boxes_list.append(boxes_data)
                 copyfile(source_image_path, destination_image_path)
@@ -154,7 +156,7 @@ def process_folders(model, device, output_folder, slices_folder=SLICES_FOLDER):
     processed_count = 0
     total_detections = 0
     for folder in os.listdir(slices_folder):
-        folder_path = f"{slices_folder}/{folder}"
+        folder_path = os.path.join(slices_folder, folder)
         if os.path.isdir(folder_path):
             detections, boxes_list = process_folder(folder_path, model, device, output_folder)
             if detections > 0:

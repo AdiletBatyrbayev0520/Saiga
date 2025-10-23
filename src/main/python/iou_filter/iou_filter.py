@@ -24,10 +24,13 @@ def calculate_iou(box1, box2):
     return intersection_area / union_area
 
 def update_coordinates(boxes_list):
+    import os
     new_boxes_list = boxes_list.copy()
     for boxes in new_boxes_list:
-        x_min = int(boxes['source_image_path'].split('/')[-1].split('_')[-2].split('.')[0])
-        y_min = int(boxes['source_image_path'].split('/')[-1].split('_')[-1].split('.')[0])
+        # Используем os.path.basename для кроссплатформенной работы
+        basename = os.path.basename(boxes['source_image_path'])
+        x_min = int(basename.split('_')[-2].split('.')[0])
+        y_min = int(basename.split('_')[-1].split('.')[0])
 
         for box in boxes['coordinates']:
             box[0] = box[0] + x_min

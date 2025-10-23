@@ -28,8 +28,10 @@ def create_destination_folder(folder_name):
     return folder_name
 
 def get_slice_coordinates(filename):
-    x_min = int(filename.split('/')[-1].split('_')[-2].split('.')[0])
-    y_min = int(filename.split('/')[-1].split('_')[-1].split('.')[0])
+    # Используем os.path.basename для кроссплатформенной работы
+    basename = os.path.basename(filename)
+    x_min = int(basename.split('_')[-2].split('.')[0])
+    y_min = int(basename.split('_')[-1].split('.')[0])
     return x_min, y_min
 
 
